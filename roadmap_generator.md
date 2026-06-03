@@ -56,7 +56,12 @@ Cover, at minimum:
 - What's the smallest version that delivers real value?
 
 **Requirements**
-- Core functional requirements (what it must *do*).
+- Core functional requirements — list the v1 features, then **drill into each one**:
+  - *Goal* in one sentence.
+  - *Acceptance criteria* — concrete and testable. ("User can do X" not "X works.")
+  - *States & edge cases* — empty, loading, error, boundary inputs, conflicting inputs, partial failures.
+  - *Out of scope (this feature)* — what's tempting but deferred.
+  Don't accept "users can log in" as a feature. Push: "Users sign in with email + magic link. Magic link expires in 15 minutes. After 5 failed attempts, rate-limit by IP. Malformed email shows inline error. Loading state on submit." That's what makes a roadmap executable instead of decorative.
 - Non-functional: auth, security, performance, offline, compliance, scale.
 - Hard constraints: budget, deadline, team size, existing systems to integrate with.
 
@@ -105,11 +110,11 @@ Throughout, mirror the idea back in your own words so the user can confirm or co
 
 ### Readiness Gate
 Do not offer to generate `ROADMAP.md` until you can confidently fill in: concept/why, target
-user, expected user scale, v1 scope (with explicit out-of-scope), tech stack + dev loop, a
-chosen visual direction, an accessibility stance appropriate to the audience, and a first pass
-at development stages. When the gate is met, **summarize the plan back to the user and
-explicitly ask: "I think we have enough to draft your ROADMAP.md — want me to generate it
-now?"** Wait for confirmation.
+user, expected user scale, v1 scope (with explicit out-of-scope), **each v1 feature with
+acceptance criteria and key states**, tech stack + dev loop, a chosen visual direction, an
+accessibility stance appropriate to the audience, and a first pass at development stages.
+When the gate is met, **summarize the plan back to the user and explicitly ask: "I think we
+have enough to draft your ROADMAP.md — want me to generate it now?"** Wait for confirmation.
 
 ---
 
@@ -127,9 +132,12 @@ monolithic fenced block — long single blocks get silently truncated.
 ### Task sizing
 Decompose work so each task is a **single concern, testable in isolation**. Think "one PR,
 one review" rather than estimating hours — with AI-assisted development wall-clock varies
-wildly. A good task is small enough that its definition of done fits in one sentence. Group
-tasks under milestones, milestones under development stages. Order so dependencies come
-first. Mark dependencies inline: `(depends on 1.1)`.
+wildly. A good task is small enough that its definition of done fits in one sentence.
+
+Tasks come *from* the milestone's acceptance criteria — for each criterion, what work is
+needed to satisfy it? This keeps tasks anchored to outcomes, not activities. Group tasks
+under milestones, milestones under development stages. Order so dependencies come first.
+Mark dependencies inline: `(depends on 1.1)`.
 
 ### Required structure of `ROADMAP.md`
 
@@ -172,14 +180,23 @@ Target WCAG level and the specific commitments (colorblind-safe palette, dyslexi
 High-level phases from zero to launch and beyond (Foundation → Core Features → Polish → Launch → Post-launch). For each: goal and exit criteria.
 
 ## 10. Milestones & Task Breakdown
-The heart of the file. For each stage, list milestones; under each, decomposed tasks.
+The heart of the file. **Each milestone is a mini feature spec**: goal, acceptance criteria, states/edge cases, what's deferred, then tasks derived from the acceptance criteria. Tasks come *from* the spec — they're how you verify each acceptance criterion — not invented separately.
 
 ### Stage 1: <name> — <goal>
-**Milestone 1.1: <name>**
-- [ ] Task ...
-- [ ] Task ...
-**Milestone 1.2: <name>**
-- [ ] Task ...
+
+**Milestone 1.1: <feature name>**
+- *Goal:* one sentence.
+- *Acceptance criteria:*
+  - [ ] Concrete, testable statement.
+  - [ ] ...
+- *States & edge cases:* empty / loading / error / boundary / conflicting inputs.
+- *Out of scope (this milestone):* explicit deferrals.
+- *Tasks:*
+  - [ ] Task derived from acceptance criterion (depends on X.Y where relevant).
+  - [ ] ...
+
+**Milestone 1.2: <feature name>**
+*(same shape)*
 
 ### Stage 2: <name> — <goal>
 ...
@@ -213,18 +230,43 @@ a fictional "FocusLog" personal time-tracking app:
 - `prefers-reduced-motion` disables list-reorder animations.
 - ARIA live regions announce timer start/stop.
 
-### Stage 1: Foundation — local app boots, can log a session
+### Stage 1: Foundation — local app boots, user can log a session
+
 **Milestone 1.1: Project scaffold**
-- [x] Init Vite + React + TS project
-- [x] Set up Tailwind with the chosen color tokens
-- [ ] Wire up Vitest + Playwright
-**Milestone 1.2: Data layer**
-- [ ] Define `Session` schema (depends on 1.1)
-- [ ] Local persistence via IndexedDB wrapper
-- [ ] Seed script for dev data
+- *Goal:* dev environment runs locally with one command, tests included.
+- *Acceptance criteria:*
+  - [x] `npm run dev` boots Vite + React + TS on a known port.
+  - [x] Tailwind compiles with project color tokens.
+  - [ ] `npm test` runs Vitest unit tests; `npm run e2e` runs Playwright smoke.
+- *States & edge cases:* none — infrastructure milestone.
+- *Out of scope:* CI/CD pipeline (Stage 4).
+- *Tasks:*
+  - [x] Init Vite + React + TS project.
+  - [x] Configure Tailwind with token file.
+  - [ ] Wire up Vitest + sample component test.
+  - [ ] Wire up Playwright + smoke test (depends on 1.1 dev server).
+
+**Milestone 1.2: Log a session**
+- *Goal:* user can start, stop, and persist a focus session locally.
+- *Acceptance criteria:*
+  - [ ] Start button records a session with a timestamp.
+  - [ ] Stop button finalizes the session with a duration.
+  - [ ] Sessions persist across page reloads.
+  - [ ] Past sessions list renders newest first.
+- *States & edge cases:*
+  - Empty list — show "No sessions yet" with a CTA, not a blank pane.
+  - Active timer + tab close — auto-stop on next load using last-seen timestamp.
+  - 0-second session (double-click) — discard, don't save.
+- *Out of scope:* edit / delete sessions (Stage 2), tagging (Stage 2), sync across devices (Stage 5).
+- *Tasks:*
+  - [ ] Define `Session` schema (depends on 1.1).
+  - [ ] IndexedDB wrapper: `start`, `stop`, `listSessions`.
+  - [ ] Timer component with start/stop, persists active session id.
+  - [ ] Sessions list component with empty + populated states.
+  - [ ] Auto-stop logic on app load if an active session exists.
 ```
 
-That's the level of specificity to aim for — named choices, concrete tasks, no fluff.
+That's the quality bar: every milestone is specced and tasked, not just listed.
 
 ---
 
